@@ -24,16 +24,26 @@ authentication, and it also integrates Celery with Redis as the message broker.
 from pathlib import Path
 from datetime import timedelta
 
+import environ
+import os
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
+env = environ.Env()
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-_812h8p5sw7+!a6lis-b2c#im-ndy_n+6$x2uoi+-nz9*bbc#1'
+SECRET_KEY = env('SECRET_KEY')
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 
-ALLOWED_HOSTS = []
+DEBUG = env.bool('DEBUG', default=True)
+
+
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[])
 
 # Application definition
 INSTALLED_APPS = [
@@ -79,16 +89,18 @@ TEMPLATES = [
 WSGI_APPLICATION = 'metamorph.wsgi.application'
 
 # Database configuration using PostgreSQL.
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'metamorph_db',
-        'USER': 'peehusingh',
-        'PASSWORD': 'Peehu@2003',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': env('DB_NAME'),
+        'USER': env('DB_USER'),
+        'PASSWORD': env('DB_PASSWORD'),
+        'HOST': env('DB_HOST'),
+        'PORT': env('DB_PORT'),
     }
 }
+
 
 # Password validation.
 AUTH_PASSWORD_VALIDATORS = [
@@ -126,8 +138,10 @@ SIMPLE_JWT = {
 }
 
 # Celery configuration using Redis as the broker and backend.
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+
+CELERY_BROKER_URL = env('CELERY_BROKER_URL')
+CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND')
+
 CELERY_BEAT_SCHEDULE = {
     'fetch-products-every-30-minutes': {
         'task': 'core.tasks.fetch_and_store_data',
